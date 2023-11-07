@@ -8,9 +8,12 @@ Adapted from the guide from [TensorFlow](https://www.tensorflow.org/quantum/tuto
 
 ```pip install virtualenv```  is required.
 
-Run setup.py or the following. 
+# Usage
+## First run
 ```
-pip install tensorflow==2.11.0
-pip install tensorflow-quantum==0.7.2
-pip install gym==0.18.0
+chmod 755 *
+```
+
+```
+python setup.py
 ```
