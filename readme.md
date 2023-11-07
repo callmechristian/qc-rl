@@ -24,12 +24,19 @@ Source it
 source ~/.bashrc
 ```
 
-# Usage
 ## First run
 ```
 chmod 755 *
 ```
 
 ```
-python setup.py
+./setup.sh
+```
+
+```
+. activate venv
+```
+
+```
+./install_dependencies.sh
 ```

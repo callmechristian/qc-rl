@@ -1,4 +1,12 @@
 #!/bin/bash
-pip install tensorflow==2.11.0
-pip install tensorflow_quantum
-pip install gym==0.18.0
+
+# Venv settings
+env_name="venv"
+python_version="3.9"
+
+# Create a venv using anaconda
+command="conda create -n $env_name python=$python_version anaconda"
+$command
+
+
+source activate $env_name
