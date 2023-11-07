@@ -6,6 +6,8 @@ Adapted from the guide from [TensorFlow](https://www.tensorflow.org/quantum/tuto
 # Dependencies
 **```Ubuntu 20.04```** recommended
 
+```pip install virtualenv```  is required.
+
 Run setup.py or the following. 
 ```
 pip install tensorflow==2.11.0
