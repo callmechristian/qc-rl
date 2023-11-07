@@ -2,12 +2,16 @@ import os
 import subprocess
 import venv
 
-# Create a virtual environment
-venv_dir = "./venv"
-venv.create(venv_dir, with_pip=True)
+# Venv settings
+env_name = "venv"
+python_version = "3.8"
+
+# Create a venv using anaconda
+command = f"conda create -n {env_name} python={python_version} anaconda"
+process = subprocess.run(command, shell=True, check=False)
 
 # Activate the virtual environment
-activate_script = ". ./venv/bin/activate"
+activate_script = "conda activate venv"
 command = f"{activate_script} && ./setup.sh"
 
 if os.name == 'posix':
