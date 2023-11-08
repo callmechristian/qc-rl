@@ -1,18 +1,25 @@
 from PolicyGradientRL import *
 from PIL import Image
 import os
+import Environments
 
-env_name = "CartPole-v1"
 
-model = generate_model_policy(qubits, n_layers, n_actions, 1.0, observables)
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render=False, batch_size=10):
+def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=Environments.CartPole):
+
+    qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
+
+    ops = [cirq.Z(q) for q in qubits]
+    observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
+
+    model = generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 1.0, observables)
+
     episode_reward_history = []
     # Start training the agent
     for batch in range(n_episodes // batch_size):
         # Gather episodes
-        episodes = gather_episodes(state_bounds, n_actions, model, batch_size, env_name)
+        episodes = gather_episodes(env_type.state_bounds, env_type.n_actions, model, batch_size, env_type.env_name)
 
         # Group states, actions and returns in numpy arrays
         states = np.concatenate([ep['states'] for ep in episodes])
@@ -34,41 +41,41 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10):
 
         print('Finished episode', (batch + 1) * batch_size,
             'Average rewards: ', avg_rewards)
-
-        if avg_rewards >= reward_target:
-            break
-
+        
         if realtime_render:
-            env = gym.make(env_name)
+            env = gym.make(env_type.env_name)
             state = env.reset()
             for t in range(500):
                 env.render()
-                policy = model([tf.convert_to_tensor([state/state_bounds])])
-                action = np.random.choice(n_actions, p=policy.numpy()[0])
+                policy = model([tf.convert_to_tensor([state/env_type.state_bounds])])
+                action = np.random.choice(env_type.n_actions, p=policy.numpy()[0])
                 state, _, done, _ = env.step(action)
                 if done:
                     break
             env.close()
 
-    return episode_reward_history
+        if avg_rewards >= reward_target:
+            break
 
-def export(history: list, dir="./images", note=""):
+    return episode_reward_history, model, env
+
+def export(history: list, env_type, model, dir="./images", note=""):
     if len(history) == 0:
         raise IndexError("Train a model first!")
 
     nr = len([f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))])
 
-    env = gym.make(env_name)
+    env = gym.make(env_type.env_name)
     state = env.reset()
     frames = []
     for t in range(500):
         im = Image.fromarray(env.render(mode='rgb_array'))
         frames.append(im)
-        policy = model([tf.convert_to_tensor([state/state_bounds])])
-        action = np.random.choice(n_actions, p=policy.numpy()[0])
+        policy = model([tf.convert_to_tensor([state/env_type.state_bounds])])
+        action = np.random.choice(env_type.n_actions, p=policy.numpy()[0])
         state, _, done, _ = env.step(action)
         if done:
             break
     env.close()
-    frames[1].save(dir + '/' + str(nr) + '_gym_' + str(env_name) + str(note) + '.gif',
+    frames[1].save(dir + '/' + str(nr) + '_gym_' + str(env_type.env_name) + str(note) + '.gif',
                 save_all=True, append_images=frames[2:], optimize=False, duration=40, loop=0)

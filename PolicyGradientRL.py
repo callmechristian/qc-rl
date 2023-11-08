@@ -3,9 +3,7 @@ import gym
 from collections import defaultdict
 
 ## PARAMS ##
-state_bounds = np.array([2.4, 2.5, 0.21, 2.5])
 gamma = 1
-batch_size = 10
 n_episodes = 1000
 
 optimizer_in = tf.keras.optimizers.Adam(learning_rate=0.1, amsgrad=True)

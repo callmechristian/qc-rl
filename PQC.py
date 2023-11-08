@@ -8,17 +8,6 @@ from functools import reduce
 tf.get_logger().setLevel('ERROR')
 ## ================== ##
 
-## PARAMS ##
-n_qubits = 4 # Dimension of the state vectors in CartPole
-n_layers = 5 # Number of layers in the PQC
-n_actions = 2 # Number of actions in CartPole
-
-qubits = cirq.GridQubit.rect(1, n_qubits)
-
-ops = [cirq.Z(q) for q in qubits]
-observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
-## PARAMS ##
-
 def one_qubit_rotation(qubit, symbols):
     """
     Returns Cirq gates that apply a rotation of the bloch sphere about the X,
