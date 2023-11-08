@@ -7,7 +7,7 @@ env_name = "CartPole-v1"
 model = generate_model_policy(qubits, n_layers, n_actions, 1.0, observables)
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render=False):
+def train(reward_target=500.0, realtime_render=False, batch_size=10):
     episode_reward_history = []
     # Start training the agent
     for batch in range(n_episodes // batch_size):
@@ -24,7 +24,7 @@ def train(reward_target=500.0, realtime_render=False):
         id_action_pairs = np.array([[i, a] for i, a in enumerate(actions)])
 
         # Update model parameters.
-        reinforce_update(states, id_action_pairs, returns, model)
+        reinforce_update(states, id_action_pairs, returns, model, batch_size)
 
         # Store collected rewards
         for ep_rwds in rewards:

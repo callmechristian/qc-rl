@@ -86,7 +86,7 @@ def compute_returns(rewards_history, gamma):
     return returns
 
 @tf.function
-def reinforce_update(states, actions, returns, model):
+def reinforce_update(states, actions, returns, model, batch_size):
     states = tf.convert_to_tensor(states)
     actions = tf.convert_to_tensor(actions)
     returns = tf.convert_to_tensor(returns)
