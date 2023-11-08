@@ -2,12 +2,10 @@ from PolicyGradientRL import *
 from PIL import Image
 import os
 
-env_name = "CartPole-v1"
-
 model = generate_model_policy(qubits, n_layers, n_actions, 1.0, observables)
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render=False, batch_size=10):
+def train(reward_target=500.0, realtime_render=False, batch_size=10, env_name="CartPole-v1"):
     episode_reward_history = []
     # Start training the agent
     for batch in range(n_episodes // batch_size):
@@ -52,7 +50,7 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10):
 
     return episode_reward_history
 
-def export(history: list, dir="./images", note=""):
+def export(history: list, dir="./images", note="", env_name="CartPole-v1"):
     if len(history) == 0:
         raise IndexError("Train a model first!")
 
