@@ -16,7 +16,7 @@ class CartPole:
     max_steps=500
 
     n_qubits = 4
-    n_layers = 5 # Number of layers in the PQC
+    n_layers = 15 # Number of layers in the PQC
     n_actions = 2
 
     state_bounds = np.array([2.4, 2.5, 0.21, 2.5])
