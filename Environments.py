@@ -5,10 +5,10 @@ class AcroBot:
     max_steps=500
 
     n_qubits = 6
-    n_layers = 5 # Number of layers in the PQC
+    n_layers = 15 # Number of layers in the PQC
     n_actions = 3
 
-    state_bounds = np.array([0,1,0,1,2,2])
+    state_bounds = np.array([0.3,0.7,0.3,0.7,12,28])
     # https://www.gymlibrary.dev/environments/classic_control/acrobot/
 
 class CartPole:
