@@ -1,23 +1,29 @@
 import numpy as np
+from abc import ABC
 
-class AcroBot:
+class Environment(ABC):
+    env_name = None
+    max_steps = None
+    n_qubits = None
+    n_layers = None
+    n_actions = None
+    state_bounds = None
+    # https://www.gymlibrary.dev/environments/classic_control/acrobot/
+
+class AcroBot(Environment):
     env_name="Acrobot-v1"
     max_steps=500
-
     n_qubits = 6
     n_layers = 15 # Number of layers in the PQC
     n_actions = 3
-
     state_bounds = np.array([0.3,0.7,0.3,0.7,12,28])
     # https://www.gymlibrary.dev/environments/classic_control/acrobot/
 
-class CartPole:
+class CartPole(Environment):
     env_name="CartPole-v1"
     max_steps=500
-
     n_qubits = 4
     n_layers = 15 # Number of layers in the PQC
     n_actions = 2
-
     state_bounds = np.array([2.4, 2.5, 0.21, 2.5])
     # https://www.gymlibrary.dev/environments/classic_control/cart_pole/
