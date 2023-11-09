@@ -44,7 +44,7 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=En
             for ep_rwds in rewards:
                 episode_reward_history.append(np.sum(ep_rwds))
 
-            avg_rewards = np.mean(episode_reward_history[-10:])
+            avg_rewards = np.mean(episode_reward_history[-batch_size:])
 
             print('Finished episode', (batch + 1) * batch_size,
                 'Average rewards: ', avg_rewards)
@@ -118,9 +118,9 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=En
             # Decay epsilon
             DeepQRL.epsilon = max(DeepQRL.epsilon * DeepQRL.decay_epsilon, DeepQRL.epsilon_min)
             episode_reward_history.append(episode_reward)
-            if (episode+1)%10 == 0:
-                avg_rewards = np.mean(episode_reward_history[-10:])
-                print("Episode {}/{}, average last 10 rewards {}".format(
+            if (episode+1)%batch_size == 0:
+                avg_rewards = np.mean(episode_reward_history[-batch_size:])
+                print("Episode {}/{}, average last "+ batch_size +" rewards {}".format(
                     episode+1, n_episodes, avg_rewards))
                 if avg_rewards >= 500.0:
                     break
