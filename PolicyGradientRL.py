@@ -4,7 +4,6 @@ from collections import defaultdict
 
 ## PARAMS ##
 gamma = 1
-n_episodes = 1000
 
 optimizer_in = tf.keras.optimizers.Adam(learning_rate=0.1, amsgrad=True)
 optimizer_var = tf.keras.optimizers.Adam(learning_rate=0.01, amsgrad=True)

@@ -23,7 +23,15 @@ class CartPole(Environment):
     env_name="CartPole-v1"
     max_steps=500
     n_qubits = 4
-    n_layers = 15 # Number of layers in the PQC
+    n_layers = 5 # Number of layers in the PQC
     n_actions = 2
     state_bounds = np.array([2.4, 2.5, 0.21, 2.5])
     # https://www.gymlibrary.dev/environments/classic_control/cart_pole/
+
+class AtariBreakout(Environment):
+    env_name="ALE/Breakout-v5"
+    max_steps=500
+    n_qubits = 3
+    n_layers = 5 # Number of layers in the PQC
+    n_actions = 4 # restricted from 16
+    state_bounds = 255
