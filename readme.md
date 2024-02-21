@@ -5,24 +5,10 @@ Adapted from the guide from [TensorFlow](https://www.tensorflow.org/quantum/tuto
 
 # Dependencies
 **```Ubuntu 20.04```** recommended
+**```Python 3.9```** mandatory
 
 ## Install Conda
 https://conda.io/projects/conda/en/latest/user-guide/install/linux.html
-
-Edit your .bashrc
-```
-nano ~/.bashrc
-```
-
-Add this to the end and save it
-```
-export PATH=~/anaconda3/bin:$PATH
-```
-
-Source it
-```
-source ~/.bashrc
-```
 
 ## First run
 ```
@@ -38,5 +24,10 @@ chmod 755 *
 ```
 
 ```
-./install_dependencies.sh
+pip install -r requirements.txt
+```
+
+## Test your installation
+```
+python test_installation.py
 ```
