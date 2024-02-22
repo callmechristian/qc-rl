@@ -7,6 +7,11 @@ Adapted from the guide from [TensorFlow](https://www.tensorflow.org/quantum/tuto
 **```Ubuntu 20.04```** recommended
 **```Python 3.9```** mandatory
 
+**GCC 9.3.1**
+**Bazel 5.3.0**
+**cuDNN 8.1** 
+**CUDA 11.2**
+
 ## Install Conda
 https://conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
