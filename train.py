@@ -38,13 +38,15 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=En
 # else:
 #     normalized_states = [extract_state(s) for i, s in enumerate(states) if not done[i]]
 
-def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments, n_episodes=1000):
+def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
     observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
 
     model = generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 1.0, observables)
+    
+    env = None
 
     episode_reward_history = []
     # Start training the agent
@@ -90,13 +92,15 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
 
     return episode_reward_history, model, env
 
-def train_policy_gradient_atari(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments, n_episodes=1000):
+def train_policy_gradient_atari(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
     observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
 
     model = generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 1.0, observables)
+
+    env = None
 
     episode_reward_history = []
     # Start training the agent
@@ -150,7 +154,7 @@ def train_policy_gradient_atari(reward_target: float, realtime_render: bool, bat
 
     return episode_reward_history, model, env
 
-def train_deepq(reward_target: float, env_type: Environments, batch_size=16, n_episodes=1000):
+def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
@@ -211,7 +215,7 @@ def train_deepq(reward_target: float, env_type: Environments, batch_size=16, n_e
                 break
     return episode_reward_history, model, env
 
-def train_deepq_atari(reward_target: float, env_type: Environments, batch_size=16, n_episodes=1000):
+def train_deepq_atari(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
