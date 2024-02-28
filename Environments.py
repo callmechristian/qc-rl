@@ -35,3 +35,12 @@ class AtariBreakout(Environment):
     n_actions = 4 # restricted from 16
     state_bounds = 255
     # https://www.gymlibrary.dev/environments/atari/breakout/
+    
+class MountainCar(Environment):
+    env_name="MountainCar-v0"
+    max_steps=200
+    n_qubits = 2
+    n_layers = 5 # Number of layers in the PQC
+    n_actions = 3
+    state_bounds = np.array([0.5, 0])
+    # https://www.gymlibrary.dev/environments/classic_control/mountain_car/
