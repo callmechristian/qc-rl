@@ -5,6 +5,7 @@ import os
 import Environments
 from enum import Enum
 from scipy.special import softmax
+import operator
 
 class TrainMethod(Enum):
     PolicyGradient = 0
@@ -26,23 +27,15 @@ def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=En
             # raise NotImplementedError("Deep Q-Learning not implemented for atari.")
         else:
             return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
-
-
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
-
-
-# normalized_states = []
-# if not atari:
-#     normalized_states = [s/state_bounds for i, s in enumerate(states) if not done[i]]
-# else:
-#     normalized_states = [extract_state(s) for i, s in enumerate(states) if not done[i]]
 
 def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
     observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
+
 
     model = generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 1.0, observables)
     
@@ -158,7 +151,16 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    observables = [ops[0]*ops[1], ops[2]*ops[3]] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
+    # observables = [ops[0]*ops[1], ops[2]*ops[3]] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
+    def chunks(lst, n):
+        """Yield successive n-sized chunks from lst."""
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]
+
+    n_ops = len(ops) // env_type.n_actions  # number of ops to be multiplied together for each action
+    # Generate observables for each action by chunks of ops
+    observables = [reduce(operator.mul, chunk) for chunk in chunks(ops, n_ops)]
+    print(len(observables))
 
 
     model = DeepQRL.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
