@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("--reward_target", type=float, help="Target reward for training", default=500.0)
     parser.add_argument("--realtime_render", action="store_true", help="Enable real-time rendering", default=False)
     parser.add_argument("--batch_size", type=int, help="Training batch size", default=10)
-    parser.add_argument("--env_type", type=str, help="Environment type", choices=["CartPole", "AcroBot", "AtariBreakout"], default="CartPole", required=True)
+    parser.add_argument("--env_type", type=str, help="Environment type", choices=["CartPole", "AcroBot", "MountainCar", "AtariBreakout"], default="CartPole", required=True)
     parser.add_argument("--method", type=str, help="Training method", choices=["DeepQLearning", "PolicyGradient"], default="DeepQLearning", required=True)
     parser.add_argument("--n_episodes", type=int, help="Number of episodes to train for", default=2000)
     parser.add_argument("--note", type=str, help="Note to add to the exported gif file", default="")
@@ -34,6 +34,8 @@ if __name__ == "__main__":
         parsed_env = Environments.AcroBot
     elif args.env_type == "AtariBreakout":
         parsed_env = Environments.AtariBreakout
+    elif args.env_type == "MountainCar":
+        parsed_env = Environments.MountainCar
     else:
         raise ValueError("Invalid environment. Choices: CartPole, AcroBot, AtariBreakout")
 

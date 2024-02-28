@@ -42,5 +42,14 @@ class MountainCar(Environment):
     n_qubits = 2
     n_layers = 5 # Number of layers in the PQC
     n_actions = 3
-    state_bounds = np.array([0.5, 0])
+    state_bounds = np.array([0.5, 1])
     # https://www.gymlibrary.dev/environments/classic_control/mountain_car/
+    
+class LunarLander(Environment):
+    env_name="LunarLander-v2"
+    max_steps=500
+    n_qubits = 8
+    n_layers = 5 # Number of layers in the PQC
+    n_actions = 4
+    state_bounds = None
+    # https://www.gymlibrary.dev/environments/box2d/lunar_lander/
