@@ -280,7 +280,7 @@ def train_deepq_atari(reward_target: float, env_type: Environments.Environment, 
                 break
     return episode_reward_history, model, env
 
-def export(history: list, env_type, model, train_method: TrainMethod, dir="./images", note=""):
+def export(history: list, env_type, model, train_method: TrainMethod, dir="./images", episodes=0, note=""):
     if len(history) == 0:
         raise IndexError("Train a model first!")
 
@@ -310,5 +310,9 @@ def export(history: list, env_type, model, train_method: TrainMethod, dir="./ima
             if done:
                 break
     env.close()
-    frames[1].save(dir + '/' + str(nr) + '_gym_' + str(env_type.env_name) + str(note) + '.gif',
-                save_all=True, append_images=frames[2:], optimize=False, duration=40, loop=0)
+    if train_method == TrainMethod.PolicyGradient:
+        frames[0].save(f"{dir}/{nr}_gym_{env_type.env_name}_REINFORCE_batchSize=?_gamma={gamma}_episodes={episodes}_{note}.gif",
+                save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
+    elif train_method == TrainMethod.DeepQLearning:
+        frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={DeepQRL.batch_size}_gamma={DeepQRL.gamma}_episodes={episodes}_{note}.gif",
+                    save_all=True, append_images=frames[2:], optimize=False, duration=40, loop=0)
