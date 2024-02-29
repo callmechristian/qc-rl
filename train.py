@@ -151,18 +151,7 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
     ops = [cirq.Z(q) for q in qubits]
     # observables = [ops[0]*ops[1], ops[2]*ops[3]] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
-    def chunks(lst, n):
-        """Yield successive n-sized chunks from lst."""
-        for i in range(0, len(lst), n):
-            yield lst[i:i + n]
-
-    n_ops = len(ops) // env_type.n_actions  # number of ops to be multiplied together for each action
-    # Generate observables for each action by chunks of ops
-    observables = None
-    if env_type.n_actions > env_type.n_qubits:
-        observables = [ops[0], ops[0]*ops[1], ops[1]]
-    else:
-        observables = [reduce(operator.mul, chunk) for chunk in chunks(ops, n_ops)] # Z0*Z1 Z2*Z3
+    observables = env_type.observables_func(ops)
 
 
     model = DeepQRL.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
@@ -223,7 +212,7 @@ def train_deepq_atari(reward_target: float, env_type: Environments.Environment, 
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
+    observables = env_type.observables_func(ops)
 
 
     model = DeepQRL.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
