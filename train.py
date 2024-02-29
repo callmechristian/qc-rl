@@ -314,5 +314,5 @@ def export(history: list, env_type, model, train_method: TrainMethod, dir="./ima
         frames[0].save(f"{dir}/{nr}_gym_{env_type.env_name}_REINFORCE_batchSize=?_gamma={gamma}_episodes={episodes}_{note}.gif",
                 save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
     elif train_method == TrainMethod.DeepQLearning:
-        frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={DeepQRL.batch_size}_gamma={DeepQRL.gamma}_episodes={episodes}_{note}.gif",
+        frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={DeepQRL.batch_size}_gamma={DeepQRL.gamma}_episodes={episodes}_learningrate_{[DeepQRL.learning_rate_in, DeepQRL.learning_rate_var, DeepQRL.learning_rate_out]}_{note}.gif",
                     save_all=True, append_images=frames[2:], optimize=False, duration=40, loop=0)
