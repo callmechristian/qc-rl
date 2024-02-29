@@ -17,10 +17,14 @@ class DeepQRL:
     batch_size = 16
     steps_per_update = 10 # Train the model every x steps
     steps_per_target_update = 30 # Update the target model every x steps
+    
+    learning_rate_in = 0.001
+    learning_rate_var = 0.001
+    learning_rate_out = 0.1
 
-    optimizer_in = tf.keras.optimizers.Adam(learning_rate=0.001, amsgrad=True)
-    optimizer_var = tf.keras.optimizers.Adam(learning_rate=0.001, amsgrad=True)
-    optimizer_out = tf.keras.optimizers.Adam(learning_rate=0.1, amsgrad=True)
+    optimizer_in = tf.keras.optimizers.Adam(learning_rate=learning_rate_in, amsgrad=True)
+    optimizer_var = tf.keras.optimizers.Adam(learning_rate=learning_rate_var, amsgrad=True)
+    optimizer_out = tf.keras.optimizers.Adam(learning_rate=learning_rate_out, amsgrad=True)
 
     # Assign the model parameters to each optimizer
     w_in, w_var, w_out = 1, 0, 2
