@@ -5,8 +5,8 @@ import argparse
 
 def train_and_export(reward_target : float, realtime_render : bool, batch_size : int, env_type : Environments.Environment, method : TrainMethod, n_episodes : int, note : str = ""):
     print(f"\n{env_type.n_qubits}\n")
-    history, model, env = train(reward_target=reward_target, realtime_render=realtime_render, batch_size=batch_size, env_type=env_type, method=method, n_episodes=n_episodes)
-    export(history, env_type, model, method, note=note)
+    history, model, env, best_model = train(reward_target=reward_target, realtime_render=realtime_render, batch_size=batch_size, env_type=env_type, method=method, n_episodes=n_episodes)
+    export(history, env_type, best_model, method, note=note)
     # model.save("models/CartPole/")
 
 if __name__ == "__main__":

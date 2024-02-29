@@ -163,6 +163,8 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
     step_count = 0
     env = gym.make(env_type.env_name)
 
+    best_model = None
+
     for episode in range(n_episodes):
         episode_reward = 0
         state = env.reset()
@@ -199,14 +201,23 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
         # Decay epsilon
         DeepQRL.epsilon = max(DeepQRL.epsilon * DeepQRL.decay_epsilon, DeepQRL.epsilon_min)
+        
+        
+        # SAVE BEST MODEL -- if target reward is not reached
+        if all(episode_reward > er for er in episode_reward_history):
+            best_model = model
+            print("ADDED MODEL")
+            
+        # ADD NEW EPISODE REWARD
         episode_reward_history.append(episode_reward)
+        
         if (episode+1)%batch_size == 0:
             avg_rewards = np.mean(episode_reward_history[-batch_size:])
             print("Episode {}/{}, average last {} rewards {}".format(
                 episode+1, n_episodes, batch_size, avg_rewards))
             if avg_rewards >= reward_target:
                 break
-    return episode_reward_history, model, env
+    return episode_reward_history, model, env, best_model
 
 def train_deepq_atari(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
