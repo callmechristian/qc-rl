@@ -40,13 +40,13 @@ class CartPole(Environment):
     env_name="CartPole-v1"
     max_steps=500
     n_qubits = 4
-    n_layers = 5 # Number of layers in the PQC
+    n_layers = 4 # Number of layers in the PQC
     n_actions = 2
-    state_bounds = np.array([2.4, 2.5, 0.21, 2.5])
+    state_bounds = np.array([4.8, 1, 0.418, 1])
     # https://www.gymlibrary.dev/environments/classic_control/cart_pole/
     # learning rates 0.001 0.001 0.1
     def observables_func(ops):
-        return [ops[0]*ops[2], ops[2]*ops[3]]
+        return [ops[0]*ops[1], ops[2]*ops[3]]
 
 class AtariBreakout(Environment):
     env_name="ALE/Breakout-v5"
@@ -65,9 +65,9 @@ class MountainCar(Environment):
     env_name="MountainCar-v0"
     max_steps=200
     n_qubits = 2
-    n_layers = 5 # Number of layers in the PQC
+    n_layers = 2 # Number of layers in the PQC
     n_actions = 3
-    state_bounds = np.array([0.5, 1])
+    state_bounds = np.array([1, 1])
     # https://www.gymlibrary.dev/environments/classic_control/mountain_car/
     
     def observables_func(ops):

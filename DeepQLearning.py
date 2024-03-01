@@ -11,15 +11,16 @@ class DeepQLearning:
     max_memory_length = 10000 # Maximum replay length
     replay_memory = deque(maxlen=max_memory_length)
 
-    epsilon = 1.0  # Epsilon greedy parameter
+    epsilon_start = 0.0  # Initial epsilon greedy parameter
+    epsilon = 0.01  # Epsilon greedy parameter
     epsilon_min = 0.01  # Minimum epsilon greedy parameter
-    decay_epsilon = 0.99 # Decay rate of epsilon greedy parameter
+    epsilon_max = 1.0  # Maximum epsilon greedy parameter
     batch_size = 16
     steps_per_update = 10 # Train the model every x steps
     steps_per_target_update = 30 # Update the target model every x steps
     
-    learning_rate_in = 0.01
-    learning_rate_var = 0.01
+    learning_rate_in = 0.001
+    learning_rate_var = 0.001
     learning_rate_out = 0.1
 
     optimizer_in = tf.keras.optimizers.Adam(learning_rate=learning_rate_in, amsgrad=True)
@@ -65,11 +66,13 @@ class DeepQLearning:
 
         # Sample action
         coin = np.random.random()
-        if coin > epsilon:
+        if coin < epsilon:
+            # random action
+            action = np.random.choice(n_actions)
+        else:
+            # greedy action
             q_vals = model([state])
             action = int(tf.argmax(q_vals[0]).numpy())
-        else:
-            action = np.random.choice(n_actions)
 
         # Apply sampled action in the environment, receive reward and next state
         next_state, reward, done, _ = env.step(action)

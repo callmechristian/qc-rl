@@ -138,13 +138,17 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
                 break
 
         # Decay epsilon
-        DeepQLearning.epsilon = max(DeepQLearning.epsilon * DeepQLearning.decay_epsilon, DeepQLearning.epsilon_min)
+        # linear decay
+        # DeepQLearning.epsilon = min(DeepQLearning.epsilon + (DeepQLearning.epsilon_start + 1.0)/n_episodes, 1)
+        # exponential decay
+        DeepQLearning.epsilon = max(DeepQLearning.epsilon_min, DeepQLearning.epsilon_max * (DeepQLearning.epsilon_min / DeepQLearning.epsilon_max)**(episode/n_episodes))
+        # print("EPSILON: ", DeepQLearning.epsilon)
         
         
         # SAVE BEST MODEL -- if target reward is not reached
-        if all(episode_reward > er for er in episode_reward_history):
+        if all(episode_reward >= er for er in episode_reward_history):
             best_model = model
-            print("ADDED MODEL")
+            # print("ADDED MODEL -- REWARDS: ", episode_reward)
             
         # ADD NEW EPISODE REWARD
         episode_reward_history.append(episode_reward)
@@ -157,7 +161,7 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
                 break
     return episode_reward_history, model, env, best_model
 
-def export(history: list, env_type, model, train_method: TrainMethod, dir="./images", episodes=0, note=""):
+def export(history: list, env_type, model, train_method: TrainMethod, dir="./images", episodes=0, note="", export_gif=True):
     if len(history) == 0:
         raise IndexError("Train a model first!")
 
@@ -181,7 +185,7 @@ def export(history: list, env_type, model, train_method: TrainMethod, dir="./ima
             im = Image.fromarray(env.render(mode='rgb_array'))
             frames.append(im)
             # Use the model to predict the action probabilities
-            action_probs = model([tf.convert_to_tensor([state/env_type.state_bounds])])
+            action_probs = model([tf.convert_to_tensor([state])]) # /env_type.state_bounds
             action = int(tf.argmax(action_probs[0]).numpy())
             state, _, done, _ = env.step(action)
             if done:

@@ -6,7 +6,7 @@ import argparse
 def train_and_export(reward_target : float, realtime_render : bool, batch_size : int, env_type : Environments.Environment, method : TrainMethod, n_episodes : int, note : str = ""):
     print(f"\n{env_type.n_qubits}\n")
     history, model, env, best_model = train(reward_target=reward_target, realtime_render=realtime_render, batch_size=batch_size, env_type=env_type, method=method, n_episodes=n_episodes)
-    export(history, env_type, best_model, method, episodes=n_episodes, note=note)
+    export(history, env_type, model, method, episodes=n_episodes, note=note)
     # model.save("models/CartPole/")
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--realtime_render", action="store_true", help="Enable real-time rendering", default=False)
     parser.add_argument("--batch_size", type=int, help="Training batch size", default=10)
     parser.add_argument("--env_type", type=str, help="Environment type", choices=["CartPole", "AcroBot", "MountainCar", "AtariBreakout"], default="CartPole", required=True)
-    parser.add_argument("--method", type=str, help="Training method", choices=["DeepQLearning", "PolicyGradient"], default="DeepQLearning", required=True)
+    parser.add_argument("--method", type=str, help="Training method", choices=["DeepQLearning", "REINFORCE"], default="DeepQLearning", required=True)
     parser.add_argument("--n_episodes", type=int, help="Number of episodes to train for", default=2000)
     parser.add_argument("--note", type=str, help="Note to add to the exported gif file", default="")
 
@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
     if args.method == "DeepQLearning":
         parsed_method = TrainMethod.DeepQLearning
-    elif args.method == "PolicyGradient":
+    elif args.method == "REINFORCE":
         parsed_method = TrainMethod.REINFORCE
     else:
-        raise ValueError("Please provide a valid training method. Options are PolicyGradient and DeepQLearning")
+        raise ValueError("Please provide a valid training method. Options are REINFORCE and DeepQLearning")
     
     if args.env_type == "CartPole":
         parsed_env = Environments.CartPole
