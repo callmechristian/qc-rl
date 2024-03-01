@@ -2,7 +2,7 @@ from PQC import *
 from collections import deque
 from state_decoder import *
 
-class DeepQRL:
+class DeepQLearning:
     ## PARAMS ##
     gamma = 0.99
     n_episodes = 2000
@@ -18,8 +18,8 @@ class DeepQRL:
     steps_per_update = 10 # Train the model every x steps
     steps_per_target_update = 30 # Update the target model every x steps
     
-    learning_rate_in = 0.001
-    learning_rate_var = 0.001
+    learning_rate_in = 0.01
+    learning_rate_var = 0.01
     learning_rate_out = 0.1
 
     optimizer_in = tf.keras.optimizers.Adam(learning_rate=learning_rate_in, amsgrad=True)
@@ -32,7 +32,7 @@ class DeepQRL:
 
     class Rescaling(tf.keras.layers.Layer):
         def __init__(self, input_dim):
-            super(DeepQRL.Rescaling, self).__init__()
+            super(DeepQLearning.Rescaling, self).__init__()
             self.input_dim = input_dim
             self.w = tf.Variable(
                 initial_value=tf.ones(shape=(1,input_dim)), dtype="float32",
@@ -46,7 +46,7 @@ class DeepQRL:
 
         input_tensor = tf.keras.Input(shape=(len(qubits), ), dtype=tf.dtypes.float32, name='input')
         re_uploading_pqc = ReUploadingPQC(qubits, n_layers, observables, activation='tanh')([input_tensor])
-        process = tf.keras.Sequential([DeepQRL.Rescaling(len(observables))], name=target*"Target"+"Q-values")
+        process = tf.keras.Sequential([DeepQLearning.Rescaling(len(observables))], name=target*"Target"+"Q-values")
         Q_values = process(re_uploading_pqc)
         model = tf.keras.Model(inputs=[input_tensor], outputs=Q_values)
 
@@ -134,5 +134,5 @@ class DeepQRL:
 
         # Backpropagation
         grads = tape.gradient(loss, model.trainable_variables)
-        for optimizer, w in zip([DeepQRL.optimizer_in, DeepQRL.optimizer_var, DeepQRL.optimizer_out], [DeepQRL.w_in, DeepQRL.w_var, DeepQRL.w_out]):
+        for optimizer, w in zip([DeepQLearning.optimizer_in, DeepQLearning.optimizer_var, DeepQLearning.optimizer_out], [DeepQLearning.w_in, DeepQLearning.w_var, DeepQLearning.w_out]):
             optimizer.apply_gradients([(grads[w], model.trainable_variables[w])])

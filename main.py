@@ -24,7 +24,7 @@ if __name__ == "__main__":
     if args.method == "DeepQLearning":
         parsed_method = TrainMethod.DeepQLearning
     elif args.method == "PolicyGradient":
-        parsed_method = TrainMethod.PolicyGradient
+        parsed_method = TrainMethod.REINFORCE
     else:
         raise ValueError("Please provide a valid training method. Options are PolicyGradient and DeepQLearning")
     

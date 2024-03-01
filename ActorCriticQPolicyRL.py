@@ -1,7 +1,7 @@
 # Quantum Q-Policy Actor-Critic Reinforcement Learning #
 
-from PolicyGradientRL import *
-from DeepQRL import *
+from REINFORCE import *
+from DeepQLearning import *
 from Environments import Environment
 
 class ActorCriticAgent:
@@ -14,13 +14,13 @@ class ActorCriticAgent:
         qubits = cirq.GridQubit.rect(1, self.env_type.n_qubits)
         ops = [cirq.Z(q) for q in qubits]
         observables = [reduce((lambda x, y: x * y), ops)]  # Policy Gradient observables
-        return generate_model_policy(qubits, self.env_type.n_layers, self.env_type.n_actions, 1.0, observables)
+        return REINFORCE.generate_model_policy(qubits, self.env_type.n_layers, self.env_type.n_actions, 1.0, observables)
 
     def _initialize_critic_model(self):
         qubits = cirq.GridQubit.rect(1, self.env_type.n_qubits)
         ops = [cirq.Z(q) for q in qubits]
         observables = [ops[0] * ops[1], ops[2] * ops[3]]  # Q-Learning observables
-        return DeepQRL.generate_model_Qlearning(qubits, self.env_type.n_layers, self.env_type.n_actions, observables, False)
+        return DeepQLearning.generate_model_Qlearning(qubits, self.env_type.n_layers, self.env_type.n_actions, observables, False)
 
     def train_actor_critic(self, n_episodes, batch_size, reward_target=500.0):
         episode_reward_history = []
@@ -40,7 +40,7 @@ class ActorCriticAgent:
                 # Update the Actor using the Critic's feedback (Advantage, TD-error, etc.) (Policy Gradient)
                 self._update_actor_with_critic_feedback()
 
-            episode_reward_history.append(episode_reward)  # Append the episode reward
+            episode_reward_history.append(actor_rewards)  # Append the episode reward
 
             # Check for target reward achieved
             if np.mean(episode_reward_history[-batch_size:]) >= reward_target:
@@ -52,19 +52,19 @@ class ActorCriticAgent:
         episode_rewards = []
         batch_size = 1 # NotImplemented
         # Gather episodes
-        episodes = gather_episodes(self.env_type.state_bounds, self.env_type.n_actions, self.actor_model, batch_size, self.env_type.env_name)
+        episodes = REINFORCE.gather_episodes(self.env_type.state_bounds, self.env_type.n_actions, self.actor_model, batch_size, self.env_type.env_name)
 
         # Group states, actions and returns in numpy arrays
         states = np.concatenate([ep['states'] for ep in episodes])
         actions = np.concatenate([ep['actions'] for ep in episodes])
         rewards = [ep['rewards'] for ep in episodes]
-        returns = np.concatenate([compute_returns(ep_rwds, gamma) for ep_rwds in rewards])
+        returns = np.concatenate([REINFORCE.compute_returns(ep_rwds, REINFORCE.gamma) for ep_rwds in rewards])
         returns = np.array(returns, dtype=np.float32)
 
         id_action_pairs = np.array([[i, a] for i, a in enumerate(actions)])
 
         # Update model parameters.
-        reinforce_update(states, id_action_pairs, returns, self.actor_model, batch_size)
+        REINFORCE.reinforce_update(states, id_action_pairs, returns, self.actor_model, batch_size)
         # Update Q-model
         # self.critic_model.set_weights(self.actor_model.get_weights())
 
@@ -87,25 +87,25 @@ class ActorCriticAgent:
 
         while True:
             # Interact with env
-            interaction = DeepQRL.interact_env(state, self.actor_model, DeepQRL.epsilon, self.env_type.n_actions, env)
+            interaction = DeepQLearning.interact_env(state, self.actor_model, DeepQLearning.epsilon, self.env_type.n_actions, env)
 
             # Store interaction in the replay memory
-            DeepQRL.replay_memory.append(interaction)
+            DeepQLearning.replay_memory.append(interaction)
 
             state = interaction['next_state']
             episode_reward += interaction['reward']
             step_count += 1
 
             # Update model
-            if step_count % DeepQRL.steps_per_update == 0:
+            if step_count % DeepQLearning.steps_per_update == 0:
                 # Sample a batch of interactions and update Q_function
-                training_batch = np.random.choice(DeepQRL.replay_memory, size=batch_size)
-                DeepQRL.Q_learning_update(np.asarray([x['state'] for x in training_batch]),
+                training_batch = np.random.choice(DeepQLearning.replay_memory, size=batch_size)
+                DeepQLearning.Q_learning_update(np.asarray([x['state'] for x in training_batch]),
                                 np.asarray([x['action'] for x in training_batch]),
                                 np.asarray([x['reward'] for x in training_batch], dtype=np.float32),
                                 np.asarray([x['next_state'] for x in training_batch]),
                                 np.asarray([x['done'] for x in training_batch], dtype=np.float32),
-                                self.model, DeepQRL.gamma, self.env_type.n_actions, model_target)
+                                self.model, DeepQLearning.gamma, self.env_type.n_actions, model_target)
                 # Update Policy
 
 
@@ -114,7 +114,7 @@ class ActorCriticAgent:
                 break
 
         # Decay epsilon
-        DeepQRL.epsilon = max(DeepQRL.epsilon * DeepQRL.decay_epsilon, DeepQRL.epsilon_min)
+        DeepQLearning.epsilon = max(DeepQLearning.epsilon * DeepQLearning.decay_epsilon, DeepQLearning.epsilon_min)
 
         return episode_reward
 

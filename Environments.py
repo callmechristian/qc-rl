@@ -67,7 +67,7 @@ class MountainCar(Environment):
     n_qubits = 2
     n_layers = 5 # Number of layers in the PQC
     n_actions = 3
-    state_bounds = np.array([1, 1])
+    state_bounds = np.array([0.5, 1])
     # https://www.gymlibrary.dev/environments/classic_control/mountain_car/
     
     def observables_func(ops):
