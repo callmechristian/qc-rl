@@ -10,6 +10,7 @@ Adapted from the guide from [TensorFlow](https://www.tensorflow.org/quantum/tuto
 Docker image from **[here](https://hub.docker.com/repository/docker/callmechristian/tensorflow-quantum/general)**
 
 ## Test your installation
+Inside docker shell:
 ```
 python test_installation.py
 ```
