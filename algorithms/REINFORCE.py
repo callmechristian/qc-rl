@@ -1,6 +1,8 @@
-from quantum.PQC import *
+# package imports
 import gym
 from collections import defaultdict
+# package implements
+from quantum.PQC import *
 
 class REINFORCE:
     ## PARAMS ##
@@ -13,15 +15,16 @@ class REINFORCE:
     w_in, w_var, w_out = 1, 0, 2 # Assign the model parameters to each optimizer
     ## PARAMS ##
 
-    class Alternating(tf.keras.layers.Layer):
+    class Weighting(tf.keras.layers.Layer):
         def __init__(self, output_dim):
-            super(REINFORCE.Alternating, self).__init__()
+            super(REINFORCE.Weighting, self).__init__()
+            # * modified to use tf.random.normal instead of alternating, adding a tunable real weight to each provided observable product
             self.w = tf.Variable(
-                initial_value=tf.constant([[(-1.)**i for i in range(output_dim)]]), dtype="float32",
+                initial_value=tf.random.normal(shape=(1, output_dim)), dtype="float32",
                 trainable=True, name="obs-weights")
 
         def call(self, inputs):
-            return tf.matmul(inputs, self.w)
+            return tf.multiply(inputs, self.w)
 
     def generate_model_policy(qubits, n_layers, n_actions, beta, observables):
         """Generates a Keras model for a data re-uploading PQC policy."""
@@ -29,7 +32,7 @@ class REINFORCE:
         input_tensor = tf.keras.Input(shape=(len(qubits), ), dtype=tf.dtypes.float32, name='input')
         re_uploading_pqc = ReUploadingPQC(qubits, n_layers, observables)([input_tensor])
         process = tf.keras.Sequential([
-            REINFORCE.Alternating(n_actions),
+            REINFORCE.Weighting(n_actions),
             tf.keras.layers.Lambda(lambda x: x * beta),
             tf.keras.layers.Softmax()
         ], name="observables-policy")

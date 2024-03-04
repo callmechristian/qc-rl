@@ -1,14 +1,14 @@
-from algorithms import REINFORCE, DeepQLearning
-import gym, cirq
+# package imports
+import gym, cirq, os
 import numpy as np
 from functools import reduce
 from PIL import Image
-import os
-import Environments
 from enum import Enum
-from scipy.special import softmax
-import operator
 import tensorflow as tf
+
+# package implements
+from algorithms import REINFORCE, DeepQLearning
+import data.Environments as Environments
 
 class TrainMethod(Enum):
     REINFORCE = 0
@@ -37,7 +37,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
+    observables = observables = [reduce((lambda x, y: x * y), ops), -reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
 
     model = REINFORCE.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 0.9, observables)
     
@@ -100,7 +100,6 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
     # observables = [ops[0]*ops[1], ops[2]*ops[3]] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
     observables = env_type.observables_func(ops)
 
-
     model = DeepQLearning.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
     model_target = DeepQLearning.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, True)
 
@@ -118,7 +117,7 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
         while True:
             # Interact with env
-            interaction = DeepQLearning.interact_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env)
+            interaction = DeepQLearning.interact_gym_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env)
 
             # Store interaction in the replay memory
             DeepQLearning.replay_memory.append(interaction)

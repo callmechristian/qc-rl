@@ -1,5 +1,7 @@
-from quantum.PQC import *
+# package imports
 from collections import deque
+# package implements
+from quantum.PQC import *
 from utils.state_decoder import *
 
 class DeepQLearning:
@@ -53,7 +55,7 @@ class DeepQLearning:
 
         return model
 
-    def interact_env(state, model, epsilon, n_actions, env):
+    def interact_gym_env(state, model, epsilon, n_actions, env):
 
         state_array = []
 
@@ -81,35 +83,6 @@ class DeepQLearning:
         #     next_state = extract_state(next_state)
             
         interaction = {'state': state_array, 'action': action, 'next_state': next_state.copy(),
-                    'reward': reward, 'done':np.float32(done)}
-
-        return interaction
-    
-    def interact_env_atari(state, model, epsilon, n_actions, env):
-
-        state_array = []
-        # Preprocess state
-        # if atari:
-        #     state = extract_state(state)
-        # else:
-        state_array = np.array(state) 
-        state = tf.convert_to_tensor([state_array])
-
-        # Sample action
-        coin = np.random.random()
-        if coin > epsilon:
-            q_vals = model([state])
-            action = int(tf.argmax(q_vals[0]).numpy())
-        else:
-            action = np.random.choice(n_actions)
-
-        # Apply sampled action in the environment, receive reward and next state
-        next_state, reward, done, _ = env.step(action)
-
-        # if atari:
-        #     next_state = extract_state(next_state)
-            
-        interaction = {'state': state_array, 'action': action, 'next_state': extract_state(next_state.copy()),
                     'reward': reward, 'done':np.float32(done)}
 
         return interaction
