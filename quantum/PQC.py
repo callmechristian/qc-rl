@@ -101,4 +101,13 @@ class ReUploadingPQC(tf.keras.layers.Layer):
         joined_vars = tf.concat([tiled_up_thetas, squashed_inputs], axis=1)
         joined_vars = tf.gather(joined_vars, self.indices, axis=1)
 
-        return self.computation_layer([tiled_up_circuits, joined_vars])
+        # return self.computation_layer([tiled_up_circuits, joined_vars])
+        # Compute the expectation values of the observables
+        expectation_values = self.computation_layer([tiled_up_circuits, joined_vars])
+
+        # Print the expectation values
+        # expectation_values_printed = tf.print(expectation_values)
+        # # Use a tf.control_dependencies block to ensure the print operation is executed
+        # with tf.control_dependencies([expectation_values_printed]):
+        #     return tf.identity(expectation_values)
+        return expectation_values

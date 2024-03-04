@@ -1,11 +1,14 @@
-from REINFORCE import *
-from DeepQLearning import *
+from algorithms import REINFORCE, DeepQLearning
+import gym, cirq
+import numpy as np
+from functools import reduce
 from PIL import Image
 import os
 import Environments
 from enum import Enum
 from scipy.special import softmax
 import operator
+import tensorflow as tf
 
 class TrainMethod(Enum):
     REINFORCE = 0
@@ -40,6 +43,8 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
     
     env = None
 
+    best_model = None
+
     episode_reward_history = []
     # Start training the agent
     for batch in range(n_episodes // batch_size):
@@ -52,7 +57,6 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
         rewards = [ep['rewards'] for ep in episodes]
         returns = np.concatenate([REINFORCE.compute_returns(ep_rwds, REINFORCE.gamma) for ep_rwds in rewards])
         returns = np.array(returns, dtype=np.float32)
-
         id_action_pairs = np.array([[i, a] for i, a in enumerate(actions)])
 
         # Update model parameters.
@@ -78,11 +82,16 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
                 if done:
                     break
             env.close()
+            
+        # SAVE BEST MODEL -- if target reward is not reached
+        if all(all(episode_reward >= er) for episode_reward in rewards for er in episode_reward_history):
+            best_model = model
+            # print("ADDED MODEL -- REWARDS: ", episode_reward)
 
         if avg_rewards >= reward_target:
             break
 
-    return episode_reward_history, model, env
+    return episode_reward_history, model, env, best_model
 
 def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)

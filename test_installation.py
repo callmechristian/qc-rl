@@ -9,7 +9,7 @@ print("TensorFlow version:", tf.__version__)
 print("TensorFlow Quantum version:", tfq.__version__)
 
 # Test REPO installation
-from PQC import *
+from quantum.PQC import *
 from cirq.contrib.svg import SVGCircuit
 
 n_qubits, n_layers = 3, 1

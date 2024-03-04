@@ -1,11 +1,16 @@
-from REINFORCE import *
-from DeepQLearning import *
+from algorithms import REINFORCE, DeepQLearning
 from PIL import Image
 import os
 import Environments
 from enum import Enum
 from scipy.special import softmax
 import operator
+from quantum import PQC
+import gym, cirq
+from functools import reduce
+from utils import state_decoder
+import numpy as np
+import tensorflow as tf
 
 def train_deepq_atari(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
@@ -25,7 +30,7 @@ def train_deepq_atari(reward_target: float, env_type: Environments.Environment, 
 
     for episode in range(n_episodes):
         episode_reward = 0
-        state = extract_state(env.reset())
+        state = state_decoder.extract_state(env.reset())
 
         while True:
             # Interact with env
@@ -113,7 +118,7 @@ def train_policy_gradient_atari(reward_target: float, realtime_render: bool, bat
 
             
                 for t in range(500):
-                    policy = model([tf.convert_to_tensor([extract_state(state)])])
+                    policy = model([tf.convert_to_tensor([state_decoder.extract_state(state)])])
                     action = np.random.choice(env_type.n_actions, p=policy.numpy()[0])
                     state, _, done, _ = env.step(action)
                     if done:

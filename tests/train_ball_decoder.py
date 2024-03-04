@@ -8,7 +8,7 @@ from functools import reduce
 from collections import deque
 from PIL import Image
 
-from state_decoder import *
+from utils.state_decoder import *
 
 from Environments import AtariBreakout
 

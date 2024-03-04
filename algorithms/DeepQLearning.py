@@ -1,6 +1,6 @@
-from PQC import *
+from quantum.PQC import *
 from collections import deque
-from state_decoder import *
+from utils.state_decoder import *
 
 class DeepQLearning:
     ## PARAMS ##

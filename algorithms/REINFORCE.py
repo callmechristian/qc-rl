@@ -1,4 +1,4 @@
-from PQC import *
+from quantum.PQC import *
 import gym
 from collections import defaultdict
 
