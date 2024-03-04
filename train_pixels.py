@@ -1,11 +1,5 @@
 from algorithms import REINFORCE, DeepQLearning
-from PIL import Image
-import os
-import Environments
-from enum import Enum
-from scipy.special import softmax
-import operator
-from quantum import PQC
+import data.Environments as Environments
 import gym, cirq
 from functools import reduce
 from utils import state_decoder
@@ -77,7 +71,7 @@ def train_policy_gradient_atari(reward_target: float, realtime_render: bool, bat
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    observables = [reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
+    observables = [reduce((lambda x, y: x * y), ops), -reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
 
     model = REINFORCE.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 1.0, observables)
 
@@ -124,11 +118,8 @@ def train_policy_gradient_atari(reward_target: float, realtime_render: bool, bat
                     if done:
                         break
             finally:
-                # print("Continuing without closing the window yet")
                 if 'env' in locals():
                     env.close()
-
-        # print('Continuing...')
 
         if avg_rewards >= reward_target:
             break

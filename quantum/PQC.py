@@ -2,7 +2,6 @@ import tensorflow as tf
 import cirq, sympy
 import tensorflow_quantum as tfq
 import numpy as np
-from functools import reduce
 
 ## SET TF ERROR LEVEL ##
 tf.get_logger().setLevel('ERROR')

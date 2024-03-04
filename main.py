@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from train import *
 import numpy as np
 import argparse
+from data import Environments
 
 def train_and_export(reward_target : float, realtime_render : bool, batch_size : int, env_type : Environments.Environment, method : TrainMethod, n_episodes : int, note : str = "", export_gif : bool = False):
     print(f"\n{env_type.n_qubits}\n")

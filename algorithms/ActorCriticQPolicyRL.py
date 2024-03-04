@@ -1,8 +1,9 @@
-# Quantum Q-Policy Actor-Critic Reinforcement Learning #
-
+# package imports
+from functools import reduce
+# package implements
 from REINFORCE import *
 from DeepQLearning import *
-from Environments import Environment
+from data.Environments import Environment
 
 class ActorCriticAgent:
     def __init__(self, env_type: Environment):
@@ -87,7 +88,7 @@ class ActorCriticAgent:
 
         while True:
             # Interact with env
-            interaction = DeepQLearning.interact_env(state, self.actor_model, DeepQLearning.epsilon, self.env_type.n_actions, env)
+            interaction = DeepQLearning.interact_gym_env(state, self.actor_model, DeepQLearning.epsilon, self.env_type.n_actions, env)
 
             # Store interaction in the replay memory
             DeepQLearning.replay_memory.append(interaction)

@@ -1,16 +1,13 @@
+# packages imports
 import gym
 import numpy as np
-import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Convolution2D
-from keras.optimizers import Adam
-from functools import reduce
 from collections import deque
 from PIL import Image
-
+# package implements
 from utils.state_decoder import *
-
-from Environments import AtariBreakout
+from data.Environments import AtariBreakout
 
 # stack_size is the number of frames that will define the motion
 stack_size = 4
