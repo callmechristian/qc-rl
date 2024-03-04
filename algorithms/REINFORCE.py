@@ -24,7 +24,7 @@ class REINFORCE:
                 trainable=True, name="obs-weights")
 
         def call(self, inputs):
-            return tf.multiply(inputs, self.w)
+            return tf.multiply(inputs, tf.repeat(self.w,repeats=tf.shape(inputs)[0],axis=0))
 
     def generate_model_policy(qubits, n_layers, n_actions, beta, observables):
         """Generates a Keras model for a data re-uploading PQC policy."""
