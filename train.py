@@ -16,7 +16,7 @@ class TrainMethod(Enum):
 
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render=False, batch_size=10, env_type=Environments.CartPole, method=TrainMethod.REINFORCE, n_episodes=1000):        
+def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes=1000):
 
     if method==TrainMethod.REINFORCE:
         if env_type == Environments.AtariBreakout:
@@ -37,7 +37,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    observables = observables = [reduce((lambda x, y: x * y), ops), -reduce((lambda x, y: x * y), ops)] # Z_0*Z_1*Z_2*Z_3
+    observables = env_type.observables_func(ops)
 
     model = REINFORCE.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 0.9, observables)
     
