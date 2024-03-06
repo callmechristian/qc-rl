@@ -7,7 +7,7 @@ from enum import Enum
 import tensorflow as tf
 
 # package implements
-from algorithms import REINFORCE, DeepQLearning
+from .algorithms import REINFORCE, DeepQLearning
 import data.Environments as Environments
 
 class TrainMethod(Enum):
@@ -42,15 +42,12 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
     model = REINFORCE.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 0.9, observables)
     
     env = None
-
     best_model = None
-
     episode_reward_history = []
     # Start training the agent
     for batch in range(n_episodes // batch_size):
         # Gather episodes
-        episodes = REINFORCE.gather_episodes(env_type.state_bounds, env_type.n_actions, model, batch_size, env_type.env_name)
-
+        episodes = REINFORCE.gather_episodes(env_type.state_bounds, env_type.n_actions, model, batch_size, env_type)
         # Group states, actions and returns in numpy arrays
         states = np.concatenate([ep['states'] for ep in episodes])
         actions = np.concatenate([ep['actions'] for ep in episodes])
@@ -72,7 +69,11 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
             'Average rewards: ', avg_rewards)
         
         if realtime_render:
-            env = gym.make(env_type.env_name)
+            env = None
+            if env.gym:
+                env = gym.make(env_type.env_name)
+            else:
+                env = env_type.make()
             state = env.reset()
             for t in range(500):
                 env.render()
@@ -117,7 +118,11 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
         while True:
             # Interact with env
-            interaction = DeepQLearning.interact_gym_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env)
+            interaction = None
+            if env_type.gym:
+                interaction = DeepQLearning.interact_gym_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env)
+            else:
+                interaction = DeepQLearning.interact_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env_type.state_bounds)
 
             # Store interaction in the replay memory
             DeepQLearning.replay_memory.append(interaction)

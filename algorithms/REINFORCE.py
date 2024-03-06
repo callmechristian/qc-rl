@@ -3,6 +3,8 @@ import gym
 from collections import defaultdict
 # package implements
 from quantum.PQC import *
+from data import Environments
+import copy
 
 class REINFORCE:
     ## PARAMS ##
@@ -41,15 +43,49 @@ class REINFORCE:
 
         return model
 
-    def gather_episodes(state_bounds, n_actions, model, n_episodes, env_name):
+    # def gather_episodes_gym(state_bounds, n_actions, model, n_episodes, env_name):
+    #     """Interact with environment in batched fashion."""
+
+    #     trajectories = [defaultdict(list) for _ in range(n_episodes)]
+    #     envs = [gym.make(env_name) for _ in range(n_episodes)]
+
+    #     done = [False for _ in range(n_episodes)]
+    #     states = [e.reset() for e in envs]
+
+    #     while not all(done):
+    #         unfinished_ids = [i for i in range(n_episodes) if not done[i]]
+    #         normalized_states = [s/state_bounds for i, s in enumerate(states) if not done[i]]
+
+    #         for i, state in zip(unfinished_ids, normalized_states):
+    #             trajectories[i]['states'].append(state)
+
+    #         # Compute policy for all unfinished envs in parallel
+    #         states = tf.convert_to_tensor(normalized_states)
+    #         action_probs = model([states])
+
+    #         # Store action and transition all environments to the next state
+    #         states = [None for i in range(n_episodes)]
+    #         for i, policy in zip(unfinished_ids, action_probs.numpy()):
+    #             action = np.random.choice(n_actions, p=policy)
+    #             states[i], reward, done[i], _ = envs[i].step(action)
+    #             trajectories[i]['actions'].append(action)
+    #             trajectories[i]['rewards'].append(reward)
+
+    #     return trajectories
+    
+    def gather_episodes(state_bounds, n_actions, model, n_episodes, env: Environments.Environment):
         """Interact with environment in batched fashion."""
 
         trajectories = [defaultdict(list) for _ in range(n_episodes)]
-        envs = [gym.make(env_name) for _ in range(n_episodes)]
 
+        envs = []
+        if env.gym:
+            envs = [gym.make(env.env_name) for _ in range(n_episodes)]
+        else:
+            envs = [copy.deepcopy(env) for _ in range(n_episodes)]
         done = [False for _ in range(n_episodes)]
         states = [e.reset() for e in envs]
-
+        
         while not all(done):
             unfinished_ids = [i for i in range(n_episodes) if not done[i]]
             normalized_states = [s/state_bounds for i, s in enumerate(states) if not done[i]]
