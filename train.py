@@ -13,6 +13,10 @@ import data.Environments as Environments
 class TrainMethod(Enum):
     REINFORCE = 0
     DeepQLearning = 1
+    
+class EpsilonDecay(Enum):
+    LINEAR = 0
+    EXPONENTIAL = 1
 
 episode_reward_history = []
 
@@ -96,7 +100,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
 
     return episode_reward_history, model, env, best_model
 
-def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1):
+def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1, decay_type=EpsilonDecay.EXPONENTIAL):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
@@ -156,10 +160,14 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
                 break
 
         # Decay epsilon
-        # linear decay
-        # rlagent.epsilon = min(rlagent.epsilon_max - 1.0 * (episode/n_episodes), rlagent.epsilon_min)
-        # exponential decay
-        rlagent.epsilon = max(rlagent.epsilon_min, rlagent.epsilon_max * (rlagent.epsilon_min / rlagent.epsilon_max)**(episode/n_episodes))
+        if decay_type == EpsilonDecay.LINEAR:
+            # linear decay
+            rlagent.epsilon = min(rlagent.epsilon_max - 1.0 * (episode/n_episodes), rlagent.epsilon_min)
+        elif decay_type == EpsilonDecay.EXPONENTIAL:
+            # exponential decay
+            rlagent.epsilon = max(rlagent.epsilon_min, rlagent.epsilon_max * (rlagent.epsilon_min / rlagent.epsilon_max)**(episode/n_episodes))
+        else:
+            raise TypeError("Unrecognized decay type! Check the EpsilonDecay enum for valid decay types.")
         # print("EPSILON: ", rlagent.epsilon)
         
         
