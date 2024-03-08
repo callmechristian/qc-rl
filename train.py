@@ -16,7 +16,7 @@ class TrainMethod(Enum):
 
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.01, lr_var: float = 0.01, lr_out: float = 0.01):
+def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.001, lr_var: float = 0.001, lr_out: float = 0.1):
 
     if method==TrainMethod.REINFORCE:
         if env_type == Environments.AtariBreakout:
@@ -29,11 +29,11 @@ def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 
             raise NotImplementedError("Deep Q-Learning not implemented for atari.")
             return train_deepq_atari(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
         else:
-            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
+            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out)
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
 
-def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000, gamma=0.99, lr_in=0.01, lr_var=0.01, lr_out=0.01):
+def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000, gamma=0.99, lr_in=0.001, lr_var=0.001, lr_out=0.1):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
@@ -96,21 +96,28 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
 
     return episode_reward_history, model, env, best_model
 
-def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000):
+def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
-    # observables = [ops[0]*ops[1], ops[2]*ops[3]] # Z_0*Z_1 for action 0 and Z_2*Z_3 for action 1
     observables = env_type.observables_func(ops)
+    
+    rlagent = DeepQLearning(learning_rate_in=lr_in, learning_rate_var=lr_var, learning_rate_out=lr_out)
 
-    model = DeepQLearning.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
-    model_target = DeepQLearning.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, True)
+    model = rlagent.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, False)
+    model_target = rlagent.generate_model_Qlearning(qubits, env_type.n_layers, env_type.n_actions, observables, True)
 
     model_target.set_weights(model.get_weights())
 
     episode_reward_history = []
     step_count = 0
-    env = gym.make(env_type.env_name)
+    
+    env = []
+    if env_type.gym:
+        env = gym.make(env_type.env_name)
+    else:
+        env = env_type
+    # env = gym.make(env_type.env_name)
 
     best_model = None
 
@@ -120,32 +127,28 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
         while True:
             # Interact with env
-            interaction = None
-            if env_type.gym:
-                interaction = DeepQLearning.interact_gym_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env)
-            else:
-                interaction = DeepQLearning.interact_env(state, model, DeepQLearning.epsilon, env_type.n_actions, env_type.state_bounds)
+            interaction = rlagent.interact_env(state, model, rlagent.epsilon, env_type.n_actions, env)
 
             # Store interaction in the replay memory
-            DeepQLearning.replay_memory.append(interaction)
+            rlagent.replay_memory.append(interaction)
 
             state = interaction['next_state']
             episode_reward += interaction['reward']
             step_count += 1
 
             # Update model
-            if step_count % DeepQLearning.steps_per_update == 0:
+            if step_count % rlagent.steps_per_update == 0:
                 # Sample a batch of interactions and update Q_function
-                training_batch = np.random.choice(DeepQLearning.replay_memory, size=batch_size)
-                DeepQLearning.Q_learning_update(np.asarray([x['state'] for x in training_batch]),
+                training_batch = np.random.choice(rlagent.replay_memory, size=batch_size)
+                rlagent.Q_learning_update(np.asarray([x['state'] for x in training_batch]),
                                 np.asarray([x['action'] for x in training_batch]),
                                 np.asarray([x['reward'] for x in training_batch], dtype=np.float32),
                                 np.asarray([x['next_state'] for x in training_batch]),
                                 np.asarray([x['done'] for x in training_batch], dtype=np.float32),
-                                model, DeepQLearning.gamma, env_type.n_actions, model_target)
+                                model, rlagent.gamma, env_type.n_actions, model_target)
 
             # Update target model
-            if step_count % DeepQLearning.steps_per_target_update == 0:
+            if step_count % rlagent.steps_per_target_update == 0:
                 model_target.set_weights(model.get_weights())
 
             # Check if the episode is finished
@@ -154,10 +157,10 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
 
         # Decay epsilon
         # linear decay
-        # DeepQLearning.epsilon = min(DeepQLearning.epsilon + (DeepQLearning.epsilon_start + 1.0)/n_episodes, 1)
+        # rlagent.epsilon = min(rlagent.epsilon_max - 1.0 * (episode/n_episodes), rlagent.epsilon_min)
         # exponential decay
-        DeepQLearning.epsilon = max(DeepQLearning.epsilon_min, DeepQLearning.epsilon_max * (DeepQLearning.epsilon_min / DeepQLearning.epsilon_max)**(episode/n_episodes))
-        # print("EPSILON: ", DeepQLearning.epsilon)
+        rlagent.epsilon = max(rlagent.epsilon_min, rlagent.epsilon_max * (rlagent.epsilon_min / rlagent.epsilon_max)**(episode/n_episodes))
+        # print("EPSILON: ", rlagent.epsilon)
         
         
         # SAVE BEST MODEL -- if target reward is not reached
@@ -174,9 +177,9 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
                 episode+1, n_episodes, batch_size, avg_rewards))
             if avg_rewards >= reward_target:
                 break
-    return episode_reward_history, model, env, best_model
+    return episode_reward_history, model, env, rlagent
 
-def export(history: list, env_type, model, train_method: TrainMethod, dir="./images", episodes=0, note="", export_gif=True):
+def export(history: list, env_type, model, train_method: TrainMethod, rlagent, dir="./images", episodes=0, note="", export_gif=True):
     if len(history) == 0:
         raise IndexError("Train a model first!")
 
@@ -210,5 +213,5 @@ def export(history: list, env_type, model, train_method: TrainMethod, dir="./ima
         frames[0].save(f"{dir}/{nr}_gym_{env_type.env_name}_REINFORCE_batchSize=?_gamma=?_episodes={episodes}_{note}.gif",
                 save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
     elif train_method == TrainMethod.DeepQLearning:
-        frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={DeepQLearning.batch_size}_gamma={DeepQLearning.gamma}_episodes={episodes}_learningrate_{[DeepQLearning.learning_rate_in, DeepQLearning.learning_rate_var, DeepQLearning.learning_rate_out]}_{note}.gif",
+        frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={rlagent.batch_size}_gamma={rlagent.gamma}_episodes={episodes}_learningrate_{[rlagent.learning_rate_in, rlagent.learning_rate_var, rlagent.learning_rate_out]}_{note}.gif",
                     save_all=True, append_images=frames[2:], optimize=False, duration=40, loop=0)
