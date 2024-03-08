@@ -7,14 +7,16 @@ from data import Environments
 import copy
 
 class REINFORCE:
-    ## PARAMS ##
-    gamma = 1
+    
+    def __init__(self, gamma, lr_in, lr_var, lr_out):
+        ## PARAMS ##
+        self.gamma = gamma
 
-    optimizer_in = tf.keras.optimizers.Adam(learning_rate=0.1, amsgrad=True)
-    optimizer_var = tf.keras.optimizers.Adam(learning_rate=0.01, amsgrad=True)
-    optimizer_out = tf.keras.optimizers.Adam(learning_rate=0.1, amsgrad=True)
+        self.optimizer_in = tf.keras.optimizers.Adam(learning_rate=lr_in, amsgrad=True)
+        self.optimizer_var = tf.keras.optimizers.Adam(learning_rate=lr_var, amsgrad=True)
+        self.optimizer_out = tf.keras.optimizers.Adam(learning_rate=lr_out, amsgrad=True)
 
-    w_in, w_var, w_out = 1, 0, 2 # Assign the model parameters to each optimizer
+        self.w_in, self.w_var, self.w_out = 1, 0, 2 # Assign the model parameters to each optimizer
     ## PARAMS ##
 
     class Weighting(tf.keras.layers.Layer):
@@ -28,7 +30,7 @@ class REINFORCE:
         def call(self, inputs):
             return tf.multiply(inputs, tf.repeat(self.w,repeats=tf.shape(inputs)[0],axis=0))
 
-    def generate_model_policy(qubits, n_layers, n_actions, beta, observables):
+    def generate_model_policy(self, qubits, n_layers, n_actions, beta, observables):
         """Generates a Keras model for a data re-uploading PQC policy."""
 
         input_tensor = tf.keras.Input(shape=(len(qubits), ), dtype=tf.dtypes.float32, name='input')
@@ -73,7 +75,7 @@ class REINFORCE:
 
     #     return trajectories
     
-    def gather_episodes(state_bounds, n_actions, model, n_episodes, env: Environments.Environment):
+    def gather_episodes(self, state_bounds, n_actions, model, n_episodes, env: Environments.Environment):
         """Interact with environment in batched fashion."""
 
         trajectories = [defaultdict(list) for _ in range(n_episodes)]
@@ -88,7 +90,7 @@ class REINFORCE:
         
         while not all(done):
             unfinished_ids = [i for i in range(n_episodes) if not done[i]]
-            normalized_states = [s/state_bounds for i, s in enumerate(states) if not done[i]]
+            normalized_states = [s for i, s in enumerate(states) if not done[i]]
 
             for i, state in zip(unfinished_ids, normalized_states):
                 trajectories[i]['states'].append(state)
@@ -107,7 +109,7 @@ class REINFORCE:
 
         return trajectories
 
-    def compute_returns(rewards_history, gamma):
+    def compute_returns(self, rewards_history, gamma):
         """Compute discounted returns with discount factor `gamma`."""
         returns = []
         discounted_sum = 0
@@ -123,7 +125,7 @@ class REINFORCE:
         return returns
 
     @tf.function
-    def reinforce_update(states, actions, returns, model, batch_size):
+    def reinforce_update(self, states, actions, returns, model, batch_size):
         states = tf.convert_to_tensor(states)
         actions = tf.convert_to_tensor(actions)
         returns = tf.convert_to_tensor(returns)
@@ -135,5 +137,5 @@ class REINFORCE:
             log_probs = tf.math.log(p_actions)
             loss = tf.math.reduce_sum(-log_probs * returns) / batch_size
         grads = tape.gradient(loss, model.trainable_variables)
-        for optimizer, w in zip([REINFORCE.optimizer_in, REINFORCE.optimizer_var, REINFORCE.optimizer_out], [REINFORCE.w_in, REINFORCE.w_var, REINFORCE.w_out]):
+        for optimizer, w in zip([self.optimizer_in, self.optimizer_var, self.optimizer_out], [self.w_in, self.w_var, self.w_out]):
             optimizer.apply_gradients([(grads[w], model.trainable_variables[w])])

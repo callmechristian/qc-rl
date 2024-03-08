@@ -16,14 +16,14 @@ class TrainMethod(Enum):
 
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes=1000):
+def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.01, lr_var: float = 0.01, lr_out: float = 0.01):
 
     if method==TrainMethod.REINFORCE:
         if env_type == Environments.AtariBreakout:
             raise NotImplementedError("Policy Gradient not implemented for atari.")
             return train_policy_gradient_atari(reward_target, realtime_render, batch_size, env_type, n_episodes=n_episodes)
         else:
-            return train_policy_gradient(reward_target, realtime_render, batch_size, env_type, n_episodes=n_episodes)
+            return train_policy_gradient(reward_target, realtime_render, batch_size, env_type, n_episodes=n_episodes, gamma=gamma, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out)
     elif method == TrainMethod.DeepQLearning:
         if env_type == Environments.AtariBreakout:
             raise NotImplementedError("Deep Q-Learning not implemented for atari.")
@@ -33,13 +33,15 @@ def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
 
-def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000):
+def train_policy_gradient(reward_target: float, realtime_render: bool, batch_size: int, env_type: Environments.Environment, n_episodes=1000, gamma=0.99, lr_in=0.01, lr_var=0.01, lr_out=0.01):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
     observables = env_type.observables_func(ops)
+    
+    rlagent = REINFORCE(gamma, lr_in, lr_var, lr_out)
 
-    model = REINFORCE.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 0.9, observables)
+    model = rlagent.generate_model_policy(qubits, env_type.n_layers, env_type.n_actions, 0.9, observables)
     
     env = None
     best_model = None
@@ -47,17 +49,17 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
     # Start training the agent
     for batch in range(n_episodes // batch_size):
         # Gather episodes
-        episodes = REINFORCE.gather_episodes(env_type.state_bounds, env_type.n_actions, model, batch_size, env_type)
+        episodes = rlagent.gather_episodes(env_type.state_bounds, env_type.n_actions, model, batch_size, env_type)
         # Group states, actions and returns in numpy arrays
         states = np.concatenate([ep['states'] for ep in episodes])
         actions = np.concatenate([ep['actions'] for ep in episodes])
         rewards = [ep['rewards'] for ep in episodes]
-        returns = np.concatenate([REINFORCE.compute_returns(ep_rwds, REINFORCE.gamma) for ep_rwds in rewards])
+        returns = np.concatenate([rlagent.compute_returns(ep_rwds, rlagent.gamma) for ep_rwds in rewards])
         returns = np.array(returns, dtype=np.float32)
         id_action_pairs = np.array([[i, a] for i, a in enumerate(actions)])
 
         # Update model parameters.
-        REINFORCE.reinforce_update(states, id_action_pairs, returns, model, batch_size)
+        rlagent.reinforce_update(states, id_action_pairs, returns, model, batch_size)
 
         # Store collected rewards
         for ep_rwds in rewards:
@@ -77,7 +79,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
             state = env.reset()
             for t in range(500):
                 env.render()
-                policy = model([tf.convert_to_tensor([state/env_type.state_bounds])])
+                policy = model([tf.convert_to_tensor([state])])
                 action = np.random.choice(env_type.n_actions, p=policy.numpy()[0])
                 state, _, done, _ = env.step(action)
                 if done:
@@ -205,7 +207,7 @@ def export(history: list, env_type, model, train_method: TrainMethod, dir="./ima
                 break
     env.close()
     if train_method == TrainMethod.REINFORCE:
-        frames[0].save(f"{dir}/{nr}_gym_{env_type.env_name}_REINFORCE_batchSize=?_gamma={REINFORCE.gamma}_episodes={episodes}_{note}.gif",
+        frames[0].save(f"{dir}/{nr}_gym_{env_type.env_name}_REINFORCE_batchSize=?_gamma=?_episodes={episodes}_{note}.gif",
                 save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
     elif train_method == TrainMethod.DeepQLearning:
         frames[1].save(f"{dir}/{nr}_gym_{env_type.env_name}_DeepQLearning_batchSize={DeepQLearning.batch_size}_gamma={DeepQLearning.gamma}_episodes={episodes}_learningrate_{[DeepQLearning.learning_rate_in, DeepQLearning.learning_rate_var, DeepQLearning.learning_rate_out]}_{note}.gif",
