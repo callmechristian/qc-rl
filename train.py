@@ -20,7 +20,7 @@ class EpsilonDecay(Enum):
 
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.001, lr_var: float = 0.001, lr_out: float = 0.1):
+def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.001, lr_var: float = 0.001, lr_out: float = 0.1, decay_type: EpsilonDecay = EpsilonDecay.EXPONENTIAL):
 
     if method==TrainMethod.REINFORCE:
         if env_type == Environments.AtariBreakout:
@@ -33,7 +33,7 @@ def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 
             raise NotImplementedError("Deep Q-Learning not implemented for atari.")
             return train_deepq_atari(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
         else:
-            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out)
+            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out, decay_type=decay_type)
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
 
