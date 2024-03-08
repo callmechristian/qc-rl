@@ -20,7 +20,7 @@ class EpsilonDecay(Enum):
 
 episode_reward_history = []
 
-def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.001, lr_var: float = 0.001, lr_out: float = 0.1, decay_type: EpsilonDecay = EpsilonDecay.EXPONENTIAL):
+def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 10, env_type: Environments = Environments.CartPole, method: TrainMethod = TrainMethod.REINFORCE, n_episodes: int = 1000, gamma: float = 0.99, lr_in: float = 0.001, lr_var: float = 0.001, lr_out: float = 0.1, epsilon_decay: EpsilonDecay = EpsilonDecay.EXPONENTIAL):
 
     if method==TrainMethod.REINFORCE:
         if env_type == Environments.AtariBreakout:
@@ -33,7 +33,7 @@ def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 
             raise NotImplementedError("Deep Q-Learning not implemented for atari.")
             return train_deepq_atari(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
         else:
-            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out, decay_type=decay_type)
+            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out, epsilon_decay_type=epsilon_decay)
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
 
@@ -100,7 +100,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
 
     return episode_reward_history, model, env, best_model
 
-def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1, decay_type=EpsilonDecay.EXPONENTIAL):
+def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1, epsilon_decay_type=EpsilonDecay.EXPONENTIAL):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
@@ -160,10 +160,10 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
                 break
 
         # Decay epsilon
-        if decay_type == EpsilonDecay.LINEAR:
+        if epsilon_decay_type == EpsilonDecay.LINEAR:
             # linear decay
             rlagent.epsilon = min(rlagent.epsilon_max - 1.0 * (episode/n_episodes), rlagent.epsilon_min)
-        elif decay_type == EpsilonDecay.EXPONENTIAL:
+        elif epsilon_decay_type == EpsilonDecay.EXPONENTIAL:
             # exponential decay
             rlagent.epsilon = max(rlagent.epsilon_min, rlagent.epsilon_max * (rlagent.epsilon_min / rlagent.epsilon_max)**(episode/n_episodes))
         else:
