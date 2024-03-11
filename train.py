@@ -33,7 +33,7 @@ def train(reward_target=500.0, realtime_render: bool = False, batch_size: int = 
             raise NotImplementedError("Deep Q-Learning not implemented for atari.")
             return train_deepq_atari(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes)
         else:
-            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out, epsilon_decay_type=epsilon_decay)
+            return train_deepq(reward_target, env_type, batch_size=batch_size, n_episodes=n_episodes, lr_in=lr_in, lr_var=lr_var, lr_out=lr_out, epsilon_decay_type=epsilon_decay, create_state_history=True)
     else:
         raise ValueError("Unrecognized training method! Check the TrainMethod enum for valid methods.")
 
@@ -100,7 +100,7 @@ def train_policy_gradient(reward_target: float, realtime_render: bool, batch_siz
 
     return episode_reward_history, model, env, best_model
 
-def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1, epsilon_decay_type=EpsilonDecay.EXPONENTIAL):
+def train_deepq(reward_target: float, env_type: Environments.Environment, batch_size=16, n_episodes=1000, lr_in=0.001, lr_var=0.001, lr_out=0.1, epsilon_decay_type=EpsilonDecay.EXPONENTIAL, render: bool = False, create_state_history: bool = False):
     qubits = cirq.GridQubit.rect(1, env_type.n_qubits)
 
     ops = [cirq.Z(q) for q in qubits]
@@ -114,6 +114,8 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
     model_target.set_weights(model.get_weights())
 
     episode_reward_history = []
+    state_history = []
+    
     step_count = 0
     
     env = []
@@ -129,9 +131,16 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
         episode_reward = 0
         state = env.reset()
 
+        # RESET STATE HISTORY FOR NEW EPISODE
+        state_history = []
+        
         while True:
             # Interact with env
             interaction = rlagent.interact_env(state, model, rlagent.epsilon, env_type.n_actions, env)
+            
+            # NOT REAL TIME RENDERING - CREATES IMGS IN tmp
+            if render:
+                env.render()
 
             # Store interaction in the replay memory
             rlagent.replay_memory.append(interaction)
@@ -155,6 +164,10 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
             if step_count % rlagent.steps_per_target_update == 0:
                 model_target.set_weights(model.get_weights())
 
+            # ADD STATE HISTORY FOR RECONSTRUCTION
+            if create_state_history:
+                state_history.append(state)
+            
             # Check if the episode is finished
             if interaction['done']:
                 break
@@ -179,13 +192,14 @@ def train_deepq(reward_target: float, env_type: Environments.Environment, batch_
         # ADD NEW EPISODE REWARD
         episode_reward_history.append(episode_reward)
         
+        # PRINT AVERAGE REWARD
         if (episode+1)%batch_size == 0:
             avg_rewards = np.mean(episode_reward_history[-batch_size:])
             print("Episode {}/{}, average last {} rewards {}".format(
                 episode+1, n_episodes, batch_size, avg_rewards))
             if avg_rewards >= reward_target:
                 break
-    return episode_reward_history, model, env, rlagent
+    return episode_reward_history, model, env, rlagent, state_history
 
 def export(history: list, env_type, model, train_method: TrainMethod, rlagent, dir="./images", episodes=0, note="", export_gif=True):
     if len(history) == 0:
