@@ -8,7 +8,7 @@ import tensorflow as tf
 
 # package implements
 from .algorithms import REINFORCE, DeepQLearning
-import data.Environments as Environments
+from .data import Environments
 
 class TrainMethod(Enum):
     REINFORCE = 0

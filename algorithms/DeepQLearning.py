@@ -1,8 +1,8 @@
 # package imports
 from collections import deque
 # package implements
-from quantum.PQC import *
-from utils.state_decoder import *
+from ..quantum.PQC import *
+from ..utils.state_decoder import *
 
 class DeepQLearning:
     def __init__(self, gamma:float = 0.99, n_episodes: int = 2000, max_memory_length: int = 10000, epsilon_start:float = 0.01, epsilon: float = 0.01, epsilon_min: float = 0.01, epsilon_max: float = 1.0, batch_size: int = 16, steps_per_update: int = 10, steps_per_target_update: int = 30, learning_rate_in: float = 0.001, learning_rate_var: float = 0.001, learning_rate_out: float = 0.1):

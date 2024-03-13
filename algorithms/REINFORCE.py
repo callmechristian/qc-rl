@@ -1,10 +1,10 @@
 # package imports
 import gym
 from collections import defaultdict
-# package implements
-from quantum.PQC import *
-from data import Environments
 import copy
+# package implements
+from ..quantum.PQC import *
+from ..data import Environments
 
 class REINFORCE:
     
