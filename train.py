@@ -13,7 +13,7 @@ from .data import Environments
 class TrainMethod(Enum):
     REINFORCE = 0
     DeepQLearning = 1
-    
+
 class EpsilonDecay(Enum):
     LINEAR = 0
     EXPONENTIAL = 1

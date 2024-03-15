@@ -27,29 +27,6 @@ class DeepQLearning:
         self.replay_memory = deque(maxlen=10000)
         # Assign the model parameters to each optimizer
         self.w_in, self.w_var, self.w_out = 1, 0, 2 
-        
-        
-    # ## PARAMS ##
-    # gamma = 0.99
-    # n_episodes = 2000
-
-    # # Define replay memory
-    # max_memory_length = 10000 # Maximum replay length
-    # replay_memory=deque(maxlen=max_memory_length)
-
-    # epsilon_start = 0.0  # Initial epsilon greedy parameter
-    # epsilon = 0.01  # Epsilon greedy parameter
-    # epsilon_min = 0.01  # Minimum epsilon greedy parameter
-    # epsilon_max = 1.0  # Maximum epsilon greedy parameter
-    # batch_size = 16
-    # steps_per_update = 10 # Train the model every x steps
-    # steps_per_target_update = 30 # Update the target model every x steps
-    
-    # learning_rate_in = 0.001
-    # learning_rate_var = 0.001
-    # learning_rate_out = 0.1
-
-    ## PARAMS ##
 
     class Rescaling(tf.keras.layers.Layer):
             """
@@ -97,39 +74,7 @@ class DeepQLearning:
         model = tf.keras.Model(inputs=[input_tensor], outputs=Q_values)
 
         return model
-
-    # def interact_gym_env(self, state, model, epsilon, n_actions, env):
-
-    #     state_array = []
-
-    #     # Preprocess state
-    #     # if atari:
-    #     #     state = extract_state(state)
-    #     # else:
-    #     state_array = np.array(state) 
-    #     state = tf.convert_to_tensor([state_array])
-
-    #     # Sample action
-    #     coin = np.random.random()
-    #     if coin < epsilon:
-    #         # random action
-    #         action = np.random.choice(n_actions)
-    #     else:
-    #         # greedy action
-    #         q_vals = model([state])
-    #         action = int(tf.argmax(q_vals[0]).numpy())
-
-    #     # Apply sampled action in the environment, receive reward and next state
-    #     next_state, reward, done, _ = env.step(action)
-
-    #     # if atari:
-    #     #     next_state = extract_state(next_state)
-            
-    #     interaction = {'state': state_array, 'action': action, 'next_state': next_state.copy(),
-    #                 'reward': reward, 'done':np.float32(done)}
-
-    #     return interaction
-    
+        
     def interact_env(self, state, model, epsilon, n_actions, env):
         state_array = []
 
